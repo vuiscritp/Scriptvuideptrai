@@ -1,0 +1,187 @@
+-- VUI SCRIPT HUB 💫 (Fly + Speed + Infinite Jump)
+-- Works on KNRL / Delta X / Arceus X Neo
+
+local plr = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local cam = workspace.CurrentCamera
+local fly = false
+local infjump = false
+local bv, bg
+local speed = 80
+local walkspeed = 16
+local sprint = false
+local jumppower = 50
+
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 270, 0, 200)
+main.Position = UDim2.new(0.5, -135, 0.5, -100)
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+main.BackgroundTransparency = 0.1
+main.Active = true
+main.Draggable = true
+main.Name = "VUI_MAIN"
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+title.Text = "🌙 VUI HUB"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+local close = Instance.new("TextButton", main)
+close.Size = UDim2.new(0, 30, 0, 30)
+close.Position = UDim2.new(1, -30, 0, 0)
+close.Text = "✖"
+close.TextColor3 = Color3.new(1, 0.3, 0.3)
+close.BackgroundTransparency = 1
+close.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+-- Buttons
+local flyBtn = Instance.new("TextButton", main)
+flyBtn.Size = UDim2.new(0, 120, 0, 40)
+flyBtn.Position = UDim2.new(0, 10, 0, 50)
+flyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+flyBtn.Text = "🚀 Fly: OFF"
+flyBtn.TextColor3 = Color3.new(1,1,1)
+flyBtn.Font = Enum.Font.Gotham
+flyBtn.TextSize = 14
+
+local jumpBtn = Instance.new("TextButton", main)
+jumpBtn.Size = UDim2.new(0, 120, 0, 40)
+jumpBtn.Position = UDim2.new(0, 10, 0, 100)
+jumpBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+jumpBtn.Text = "☁ Infinite Jump: OFF"
+jumpBtn.TextColor3 = Color3.new(1,1,1)
+jumpBtn.Font = Enum.Font.Gotham
+jumpBtn.TextSize = 14
+
+local playerFrame = Instance.new("Frame", main)
+playerFrame.Size = UDim2.new(0, 110, 0, 100)
+playerFrame.Position = UDim2.new(1, -120, 0, 50)
+playerFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+
+local wsLabel = Instance.new("TextLabel", playerFrame)
+wsLabel.Size = UDim2.new(1, 0, 0, 25)
+wsLabel.Text = "WalkSpeed"
+wsLabel.TextColor3 = Color3.new(1,1,1)
+wsLabel.BackgroundTransparency = 1
+wsLabel.Font = Enum.Font.Gotham
+wsLabel.TextSize = 13
+
+local wsBox = Instance.new("TextBox", playerFrame)
+wsBox.Size = UDim2.new(1, -10, 0, 25)
+wsBox.Position = UDim2.new(0, 5, 0, 25)
+wsBox.Text = tostring(walkspeed)
+wsBox.TextColor3 = Color3.new(1,1,1)
+wsBox.BackgroundColor3 = Color3.fromRGB(50,50,70)
+
+local jpLabel = Instance.new("TextLabel", playerFrame)
+jpLabel.Size = UDim2.new(1, 0, 0, 25)
+jpLabel.Position = UDim2.new(0, 0, 0, 55)
+jpLabel.Text = "JumpPower"
+jpLabel.TextColor3 = Color3.new(1,1,1)
+jpLabel.BackgroundTransparency = 1
+jpLabel.Font = Enum.Font.Gotham
+jpLabel.TextSize = 13
+
+local jpBox = Instance.new("TextBox", playerFrame)
+jpBox.Size = UDim2.new(1, -10, 0, 25)
+jpBox.Position = UDim2.new(0, 5, 0, 80)
+jpBox.Text = tostring(jumppower)
+jpBox.TextColor3 = Color3.new(1,1,1)
+jpBox.BackgroundColor3 = Color3.fromRGB(50,50,70)
+
+-- Functions
+local function setWalkSpeed(val)
+	local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+	if hum then hum.WalkSpeed = val end
+end
+
+local function setJumpPower(val)
+	local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+	if hum then hum.JumpPower = val end
+end
+
+wsBox.FocusLost:Connect(function()
+	local num = tonumber(wsBox.Text)
+	if num then walkspeed = num setWalkSpeed(num) end
+end)
+
+jpBox.FocusLost:Connect(function()
+	local num = tonumber(jpBox.Text)
+	if num then jumppower = num setJumpPower(num) end
+end)
+
+local function startFly()
+	local char = plr.Character or plr.CharacterAdded:Wait()
+	local root = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not root or not hum then return end
+	bv = Instance.new("BodyVelocity", root)
+	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	bv.Velocity = Vector3.zero
+	bg = Instance.new("BodyGyro", root)
+	bg.MaxTorque = Vector3.new(4e5,4e5,4e5)
+	bg.CFrame = root.CFrame
+	hum.PlatformStand = true
+end
+
+local function stopFly()
+	if bv then bv:Destroy() bv=nil end
+	if bg then bg:Destroy() bg=nil end
+	local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+	if hum then hum.PlatformStand = false end
+end
+
+flyBtn.MouseButton1Click:Connect(function()
+	fly = not fly
+	flyBtn.Text = fly and "🚀 Fly: ON" or "🚀 Fly: OFF"
+	if fly then startFly() else stopFly() end
+end)
+
+jumpBtn.MouseButton1Click:Connect(function()
+	infjump = not infjump
+	jumpBtn.Text = infjump and "☁ Infinite Jump: ON" or "☁ Infinite Jump: OFF"
+end)
+
+-- Controls
+rs.Heartbeat:Connect(function()
+	if fly and bv and bg then
+		local dir = Vector3.zero
+		if uis:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+		if uis:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+		if uis:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+		if uis:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+		if uis:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+		if uis:IsKeyDown(Enum.KeyCode.LeftControl) or uis:IsKeyDown(Enum.KeyCode.C) then dir -= Vector3.new(0,1,0) end
+		if dir.Magnitude > 0 then dir = dir.Unit end
+		bv.Velocity = dir * speed
+		bg.CFrame = cam.CFrame
+	end
+end)
+
+uis.JumpRequest:Connect(function()
+	if not infjump then return end
+	local char = plr.Character
+	if not char then return end
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if hum and root then
+		root.Velocity = Vector3.new(root.Velocity.X, jumppower, root.Velocity.Z)
+		hum:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+plr.CharacterAdded:Connect(function(c)
+	task.wait(0.2)
+	local hum = c:WaitForChild("Humanoid")
+	hum.WalkSpeed = walkspeed
+	hum.JumpPower = jumppower
+end)
+
+setWalkSpeed(walkspeed)
+setJumpPower(jumppower)
